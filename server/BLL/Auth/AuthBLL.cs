@@ -1,4 +1,5 @@
 ﻿using server.BO.Auth;
+using server.BO.Base;
 using server.BO.User;
 using server.DAO.Auth;
 using server.DAO.User;
@@ -108,6 +109,19 @@ namespace server.BLL.Auth
                 Username = 
                 systemUser.Username 
             };
+        }
+
+        public async Task<LogoutResponseBO> LogoutAsync(string refreshToken)
+        {
+            var tokenInfor = await _authDAO.GetRefreshTokenAsync(refreshToken);
+
+            if (tokenInfor == null || string.IsNullOrEmpty(tokenInfor.RefreshToken))
+                return new LogoutResponseBO { Message = "Refresh token không tồn tại." };
+
+            var updatedDate = DateTime.Now;
+            await _authDAO.RevokeRefreshTokenAsync(tokenInfor.UserId, tokenInfor.RefreshToken, updatedDate);
+
+            return new LogoutResponseBO { Success = true, Message = "Đăng xuất thành công." };
         }
         #endregion
     }

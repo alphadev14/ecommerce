@@ -43,4 +43,14 @@ namespace server.BO.Auth
         public DateTime RevokedDate { get; set; }
         public string ReplacedByToken { get; set; }
     }
+
+    public class LogoutRequesBO
+    {
+        public string RefreshToken { get; set; }
+    }
+
+    public class LogoutResponseBO : BaseResponseBO
+    {
+
+    }
 }

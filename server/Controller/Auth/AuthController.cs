@@ -35,6 +35,13 @@ namespace server.Controller.Auth
             var result = await _authBLL.RegisterAsync(request);
             return result;
         }
+
+        [HttpPost]
+        public async Task<IActionResult> Logout([FromBody] LogoutRequesBO request)
+        {
+            var result = await _authBLL.LogoutAsync(request.RefreshToken);
+            return Ok(result);
+        }
         #endregion
     }
 }

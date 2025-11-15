@@ -10,4 +10,10 @@
         public string DeletedUser { get; set; }
         public bool IsDelete { get; set; }
     }
+
+    public class BaseResponseBO
+    {
+        public string Message { get; set; }
+        public bool Success { get; set; }
+    }
 }
