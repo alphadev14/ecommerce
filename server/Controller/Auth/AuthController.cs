@@ -28,6 +28,13 @@ namespace server.Controller.Auth
             return Ok(result);
             
         }
+
+        [HttpPost]
+        public async Task<RegisterResponseBO> Register([FromBody] RegisterRequestBO request)
+        {
+            var result = await _authBLL.RegisterAsync(request);
+            return result;
+        }
         #endregion
     }
 }

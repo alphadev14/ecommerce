@@ -15,7 +15,7 @@ namespace server.Services
             _config = config;
         }
 
-        public string GenerateJwtToken(int userId, string userName, string roleName, IEnumerable<Claim>? extraClaims = null) 
+        public string GenerateJwtToken(int userId, string userName, string roleName, string jwtId, IEnumerable<Claim>? extraClaims = null) 
         {
             var jwtKey = _config["Jwt:Key"] ?? "KeGbkhU3hIGXRELQga3XjfnT8EJci1KjISAF9UHGQmVYR9gdVzZWPHrjNDmeueQB";
             var jwtIssuer = _config["Jwt:Issuer"] ?? "ecommerce";
@@ -37,7 +37,7 @@ namespace server.Services
                 new Claim(ClaimTypes.Role, roleName),
 
                 // Unique ID của token
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(JwtRegisteredClaimNames.Jti, jwtId),
             };
 
             if (extraClaims != null)

@@ -4,8 +4,10 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using server.BLL.Auth;
 using server.BLL.Categories;
+using server.BLL.User;
 using server.DAO.Auth;
 using server.DAO.Categories;
+using server.DAO.User;
 using server.Services;
 using System.Text;
 
@@ -49,7 +51,6 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// Connect PostgreSQL 
 // ================== DB ==================
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<EcommerceDbContext>(options =>
@@ -89,15 +90,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // ========== Dependency Injection ==========
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IConfigService, ConfigService>();
+
 builder.Services.AddScoped<CategoriesDAO>();
 builder.Services.AddScoped<CategoriesBLL>();
 builder.Services.AddScoped<AuthBLL>();
 builder.Services.AddScoped<AuthDAO>();
+builder.Services.AddScoped<UserBLL>();
+builder.Services.AddScoped<UserDAO>();
 
 var app = builder.Build();
 
 
-// Swagger UI (cho cả production luôn, tiện test trên Render)
+// ========== Swagger UI ==========
 app.UseSwagger();
 app.UseSwaggerUI();
 
