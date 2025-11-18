@@ -12,6 +12,8 @@ using server.DAO.Categories;
 using server.DAO.User;
 using server.Services;
 using System.Text;
+using server.BLL.Products;
+using server.DAO.Products;
 
 AppContext.SetSwitch("Microsoft.AspNetCore.Authentication.SuppressSameSiteNone", true);
 
@@ -59,6 +61,14 @@ builder.Services.AddSwaggerGen(c =>
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<EcommerceDbContext>(options =>
     options.UseNpgsql(connectionString));
+
+// ================== Redis ==================
+var redisConnection = builder.Configuration["Redis:ConnectionStrings"];
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = redisConnection;
+    options.InstanceName = "Ecommerce_";
+});
 
 // ================== CORS ==================
 builder.Services.AddCors(options =>
@@ -135,6 +145,8 @@ builder.Services.AddScoped<AuthBLL>();
 builder.Services.AddScoped<AuthDAO>();
 builder.Services.AddScoped<UserBLL>();
 builder.Services.AddScoped<UserDAO>();
+builder.Services.AddScoped<ProductsBLL>();
+builder.Services.AddScoped<ProductsDAO>();
 
 // ================== Build App ==================
 var app = builder.Build();
