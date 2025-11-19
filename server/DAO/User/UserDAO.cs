@@ -67,6 +67,5 @@ namespace server.DAO.User
 
             await cmd.ExecuteNonQueryAsync();
         }
-
     }
 }

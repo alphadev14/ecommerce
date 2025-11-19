@@ -14,6 +14,8 @@ using server.Services;
 using System.Text;
 using server.BLL.Products;
 using server.DAO.Products;
+using server.BLL.Cart;
+using server.DAO.Cart;
 
 AppContext.SetSwitch("Microsoft.AspNetCore.Authentication.SuppressSameSiteNone", true);
 
@@ -147,6 +149,8 @@ builder.Services.AddScoped<UserBLL>();
 builder.Services.AddScoped<UserDAO>();
 builder.Services.AddScoped<ProductsBLL>();
 builder.Services.AddScoped<ProductsDAO>();
+builder.Services.AddScoped<CartBLL>();
+builder.Services.AddScoped<CartDAO>();
 
 // ================== Build App ==================
 var app = builder.Build();
