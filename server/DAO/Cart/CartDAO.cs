@@ -25,17 +25,17 @@ namespace server.DAO.Cart
 
             try
             {
-                // 1. Check if user already has cart order (status = 0)
-                var getOrderSql = @"
-                    SELECT cartid 
-                    FROM operation.om_carts 
-                    WHERE userid = @userid
-                    LIMIT 1;
-                ";
+                // 1. Check if user already has cart
+                var getCartSql = @"
+                        SELECT cartid 
+                        FROM operation.om_carts 
+                        WHERE userid = @userid
+                        LIMIT 1;
+                    ";
 
                 int? existingCartId = null;
 
-                await using (var checkCmd = new NpgsqlCommand(getOrderSql, conn, tran))
+                await using (var checkCmd = new NpgsqlCommand(getCartSql, conn, tran))
                 {
                     checkCmd.Parameters.AddWithValue("@userid", userId);
                     var result = await checkCmd.ExecuteScalarAsync();
@@ -46,16 +46,16 @@ namespace server.DAO.Cart
 
                 if (existingCartId == null)
                 {
-                    // 2. INSERT new order
-                    var insertOrderSql = @"
+                    // 2. INSERT new cart
+                    var insertCartSql = @"
                         INSERT INTO operation.om_carts
                         (userid, storeid, totalprice, discountamount, finalprice, couponcode, status, createduser)
                         VALUES
-                        (@userid, @storeid, @totalprice, @discountamount, @finalprice, @couponcode, 0)
+                        (@userid, @storeid, @totalprice, @discountamount, @finalprice, @couponcode, 0, @createduser)
                         RETURNING cartid;
                     ";
 
-                    await using var insertCmd = new NpgsqlCommand(insertOrderSql, conn, tran);
+                    await using var insertCmd = new NpgsqlCommand(insertCartSql, conn, tran);
                     insertCmd.Parameters.AddWithValue("@userid", userId);
                     insertCmd.Parameters.AddWithValue("@storeid", 116);
                     insertCmd.Parameters.AddWithValue("@totalprice", 20000);
@@ -68,37 +68,38 @@ namespace server.DAO.Cart
                 }
                 else
                 {
-                    // 3. UPDATE existing order
+                    // 3. UPDATE existing cart
                     cartId = existingCartId.Value;
 
-                    var updateOrderSql = @"
+                    var updateCartSql = @"
                         UPDATE operation.om_carts
                         SET totalprice = @totalprice,
                             discountamount = @discountamount,
                             finalprice = @finalprice,
-                            couponcode = @couponcode
-                            updateduser = @userid,
+                            couponcode = @couponcode,
+                            updateduser = @updateduser,
                             updateddate = NOW()
                         WHERE cartid = @cartid;
                     ";
 
-                    await using var updateCmd = new NpgsqlCommand(updateOrderSql, conn, tran);
+                    await using var updateCmd = new NpgsqlCommand(updateCartSql, conn, tran);
                     updateCmd.Parameters.AddWithValue("@cartid", cartId);
                     updateCmd.Parameters.AddWithValue("@totalprice", 100000);
                     updateCmd.Parameters.AddWithValue("@discountamount", 10000);
                     updateCmd.Parameters.AddWithValue("@finalprice", 90000);
-                    updateCmd.Parameters.AddWithValue("@coupon_code", "");
+                    updateCmd.Parameters.AddWithValue("@couponcode", "");
                     updateCmd.Parameters.AddWithValue("@updateduser", userId);
 
                     await updateCmd.ExecuteNonQueryAsync();
 
-                    // 4. Delete existing order details
+                    // 4. Soft delete old details
                     var deleteDetailsSql = @"
                         UPDATE operation.om_cart_details 
                         SET isdelete = TRUE, 
                             deleteduser = @deleteduser, 
                             deleteddate = NOW()
-                        WHERE cartid = @cartid;";
+                        WHERE cartid = @cartid;
+                    ";
 
                     await using var delCmd = new NpgsqlCommand(deleteDetailsSql, conn, tran);
                     delCmd.Parameters.AddWithValue("@deleteduser", userId);
@@ -106,12 +107,12 @@ namespace server.DAO.Cart
                     await delCmd.ExecuteNonQueryAsync();
                 }
 
-                // 5. INSERT new order details
+                // 5. INSERT new details
                 var insertDetailSql = @"
                     INSERT INTO operation.om_cart_details
-                    (cartid, productid, quantity, price, promoid, discountid, discountamount, finalprice)
+                    (cartid, productid, quantity, price, promoid, discountid, discountamount)
                     VALUES
-                    (@cartid, @productid, @quantity, @price, @promoid, @discountid, @discountamount, @finalprice);
+                    (@cartid, @productid, @quantity, @price, @promoid, @discountid, @discountamount);
                 ";
 
                 foreach (var item in cartData.Items)
@@ -124,12 +125,10 @@ namespace server.DAO.Cart
                     detailCmd.Parameters.AddWithValue("@promoid", 1);
                     detailCmd.Parameters.AddWithValue("@discountid", 1);
                     detailCmd.Parameters.AddWithValue("@discountamount", 2000);
-                    detailCmd.Parameters.AddWithValue("@finalprice", 8000);
 
                     await detailCmd.ExecuteNonQueryAsync();
                 }
 
-                // Commit transaction
                 await tran.CommitAsync();
             }
             catch (Exception ex)
@@ -138,6 +137,5 @@ namespace server.DAO.Cart
                 throw new Exception($"Lỗi lưu dữ liệu giỏ hàng khách hàng đã định danh: {ex}");
             }
         }
-
     }
 }
