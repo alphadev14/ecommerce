@@ -30,7 +30,7 @@ namespace server.BLL.Cart
             CartModel cart = new CartModel();
 
             // Khách hàng chưa có tài khoản hoặc chưa đăng nhập
-            if(userId == 1)
+            if(userId == 2)
             {
                 cart = await this.AddToCartGuestAsync(request);
             }
@@ -109,6 +109,7 @@ namespace server.BLL.Cart
             _redis.Set(key, cartData, TimeSpan.FromDays(30));
 
             // 4. TODO: Save vào DB (optional - khi checkout hoặc sync)
+            await _cartDAO.UpdateOrInsertToCartAsync(userId, cartData);
             return cartData;
         }
 
