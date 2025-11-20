@@ -2,7 +2,7 @@
 
 namespace server.BO.Cart
 {
-    public class CartBO : BaseBO
+    public class CartBO
     {
         public string? CartId { get; set; }  
         public int? UserId { get; set; }  
@@ -53,5 +53,11 @@ namespace server.BO.Cart
     public class CartResponseBO : BaseResponseBO
     {
         public CartBO Data { get; set; }
+    }
+
+    public class UpdateCartRequestBO
+    {
+        public string? CartId { get; set; }
+        public string? ProductIds { get; set; }
     }
 }

@@ -33,22 +33,22 @@ namespace server.Controller.Cart
         }
 
         [HttpPut]
-        public async Task<CartResponseBO> UpdateCartByCustomer([FromBody] AddToCartRequestBO request)
+        public async Task<IActionResult> UpdateCartByCustomer([FromBody] AddToCartRequestBO request)
         {
             var result = await _cartBLL.UpdateCartByCustomerAsync(request);
-            return result;
+            return Ok(result);
+        }
+
+        [HttpPut]
+        public async Task RemoveCartItemByCustomer([FromBody] UpdateCartRequestBO request)
+        {
+            await _cartBLL.RemoveCartItemByCustomerAsync(request);
         }
 
         [HttpDelete]
-        public async Task RemoveCartItemByCustomer([FromBody] AddToCartRequestBO request)
+        public async Task ClearCartByCustomer([FromBody] UpdateCartRequestBO request)
         {
-            await Task.CompletedTask;
-        }
-
-        [HttpPost]
-        public async Task ClearCartByCustomer([FromBody] AddToCartRequestBO request)
-        {
-            await Task.CompletedTask;
+            await _cartBLL.ClearCartByCustomerAsync(request);
         }
 
         [HttpPost]

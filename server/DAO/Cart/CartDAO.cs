@@ -1,7 +1,6 @@
 ﻿
 using Npgsql;
 using server.BO.Cart;
-using server.BO.Categories;
 using server.DAO.Base;
 
 namespace server.DAO.Cart
@@ -185,5 +184,81 @@ namespace server.DAO.Cart
             }
         }
 
+        public async Task RemoveCartItemByUserIdAsync(int userId, List<int> productIds)
+        {
+            await using var cmd = new NpgsqlConnection(_connectionString);
+            await cmd.OpenAsync();
+
+            var sql = @"
+                    UPDATE operation.om_cart_details cd
+                    SET isdelete = TRUE,
+                        deleteduser = @userid,
+                        deleteddate = NOW()
+                    FROM operation.om_carts c
+                    WHERE cd.cartid = c.cartid
+                      AND c.userid = @userid
+                      AND cd.productid = ANY(@productids)
+                      AND cd.isdelete = FALSE;
+                ";
+
+            await using var command = new NpgsqlCommand(sql, cmd);
+            command.Parameters.AddWithValue("userid", userId);
+            command.Parameters.AddWithValue("productids", productIds);
+
+            await command.ExecuteNonQueryAsync();
+        }
+
+        public async Task ClearCartByCustomerAsync(int userid)
+        {
+            await using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            await using var tran = await conn.BeginTransactionAsync();
+
+            try
+            {
+                // 1) Xóa các cart detail thuộc user
+                var sqlDetail = @"
+                        UPDATE operation.om_cart_details cd
+                        SET isdelete = TRUE,
+                            deleteduser = @userid,
+                            deleteddate = NOW()
+                        FROM operation.om_carts c
+                        WHERE cd.cartid = c.cartid
+                          AND c.userid = @userid
+                          AND cd.isdelete = FALSE;
+                    ";
+
+                await using (var cmd = new NpgsqlCommand(sqlDetail, conn, tran))
+                {
+                    cmd.Parameters.AddWithValue("userid", userid);
+                    await cmd.ExecuteNonQueryAsync();
+                }
+
+                // 2) Xóa cart master
+                var sqlMaster = @"
+                        UPDATE operation.om_carts
+                        SET isdelete = TRUE,
+                            deleteduser = @userid,
+                            deleteddate = NOW()
+                        WHERE userid = @userid
+                          AND isdelete = FALSE;
+                    ";
+
+                await using (var cmd = new NpgsqlCommand(sqlMaster, conn, tran))
+                {
+                    cmd.Parameters.AddWithValue("userid", userid);
+                    await cmd.ExecuteNonQueryAsync();
+                }
+
+                // Commit
+                await tran.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                await tran.RollbackAsync();
+                throw new Exception($"Lỗi xóa dữ liệu giỏ hàng. {ex.Message}");
+            }
+        }
     }
 }

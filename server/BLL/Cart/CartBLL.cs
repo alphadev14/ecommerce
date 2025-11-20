@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using server.BO.Cart;
+﻿using server.BO.Cart;
 using server.Common.Redis;
 using server.DAO.Cart;
 using server.Helper;
@@ -190,6 +189,66 @@ namespace server.BLL.Cart
         public async Task<CartResponseBO> UpdateCartByCustomerAsync(AddToCartRequestBO request)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task RemoveCartItemByCustomerAsync(UpdateCartRequestBO request)
+        {
+            if (string.IsNullOrEmpty(request.CartId) || string.IsNullOrEmpty(request.ProductIds))
+                throw new Exception("Thiếu thông tin xoá sản phẩm trong giỏ hàng");
+
+            var cartResponse = new CartResponseBO();
+            int? userId = 1; // Lấy userId từ token
+            var productIds = request.ProductIds.Split(',').Select(id => int.Parse(id)).ToList();
+
+            if (userId.HasValue)
+            {
+                // Xoá trong Redis
+                var keyRedis = CartKeyBuilder.UserCart(userId.Value);
+                var cartRedis = _redis.Get<CartModel>(keyRedis);
+                if (cartRedis != null && cartRedis.Items != null)
+                {
+                    cartRedis.Items = cartRedis.Items.Where(i => !productIds.Contains(i.ProductId)).ToList();
+                    _redis.Set(keyRedis, cartRedis, TimeSpan.FromDays(30));
+                }
+
+                // Xoá trong DB
+                await _cartDAO.RemoveCartItemByUserIdAsync(userId.Value, productIds);
+            }
+            else
+            {
+                var keyRedis = CartKeyBuilder.GuestCart(request.CartId);
+                var cartRedis = _redis.Get<CartModel>(keyRedis);
+                if (cartRedis != null && cartRedis.Items != null)
+                {
+                    cartRedis.Items = cartRedis.Items.Where(i => !productIds.Contains(i.ProductId)).ToList();
+                    _redis.Set(keyRedis, cartRedis, TimeSpan.FromDays(7));
+                }
+            }
+        }
+
+        public async Task ClearCartByCustomerAsync(UpdateCartRequestBO request)
+        {
+            int? userId = 1;
+
+            if (userId.HasValue) 
+            {
+                // clear dữ liệu redis
+                var keyRedis = CartKeyBuilder.UserCart(userId.Value);
+                var cartRedis = _redis.Remove(keyRedis);
+
+                // xóa dữ liệu database
+                await _cartDAO.ClearCartByCustomerAsync(userId.Value);
+            }
+            else if (!string.IsNullOrEmpty(request.CartId))
+            {
+                // clear dữ liệu redis
+                var keyRedis = CartKeyBuilder.GuestCart(request.CartId);
+                var cartRedis = _redis.Remove(keyRedis);
+            }
+            else
+            {
+                throw new Exception("Khách hàng không tồn tại.");
+            }
         }
         #endregion
     }
