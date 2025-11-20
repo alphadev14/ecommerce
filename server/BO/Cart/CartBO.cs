@@ -4,36 +4,29 @@ namespace server.BO.Cart
 {
     public class CartBO : BaseBO
     {
-        public Guid CartId { get; set; }  
+        public string? CartId { get; set; }  
         public int? UserId { get; set; }  
         public int StoreId { get; set; } 
         public decimal TotalPrice { get; set; }
-        public decimal DiscountAmount { get; set; }
-        public decimal FinalPrice { get; set; }
+        public decimal TotalDiscountAmount { get; set; }
+        public decimal TotalFinalPrice { get; set; }
         public string? CouponCode { get; set; }
-        public string Status { get; set; } = "Pending"; 
+        public string Status { get; set; } = "Pending";
+
+        public List<CartDetailBO> ListCartDetail { get; set; }
 
     }
 
     public class CartDetailBO : CartBO
     {
         public int CartDetailId { get; set; }     
-        public Guid CartId { get; set; }          
         public int ProductId { get; set; }        
-        public int Quantity { get; set; }         
+        public double Quantity { get; set; }         
         public decimal Price { get; set; }        
         public int? PromoId { get; set; }         
         public int? DiscountId { get; set; }     
         public decimal DiscountAmount { get; set; } 
         public decimal FinalPrice { get; set; }     
-    }
-
-    public class CartResponseBO
-    {
-        public string CartId { get; set; }
-        public int? UserId { get; set; }
-        public int StoreId { get; set; }
-        public List<CartDetailBO> listProducts { get; set; }
     }
 
     public class AddToCartRequestBO
@@ -54,5 +47,11 @@ namespace server.BO.Cart
     {
         public int ProductId { get; set; }
         public int Quantity { get; set; }
+    }
+
+
+    public class CartResponseBO : BaseResponseBO
+    {
+        public CartBO Data { get; set; }
     }
 }

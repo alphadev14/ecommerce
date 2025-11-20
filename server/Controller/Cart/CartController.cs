@@ -19,9 +19,9 @@ namespace server.Controller.Cart
 
         #region methods
         [HttpGet]
-        public async Task<IActionResult> GetCartByCustomer(string cartId)
+        public async Task<IActionResult> GetCartByCustomer([FromQuery] string CartId)
         {
-            var result = await _cartBLL.GetCartByCustomerAsync(cartId);
+            var result = await _cartBLL.GetCartByCustomerAsync(CartId);
             return Ok(result);
         }
 

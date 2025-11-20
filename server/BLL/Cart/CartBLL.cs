@@ -1,4 +1,5 @@
-﻿using server.BO.Cart;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using server.BO.Cart;
 using server.Common.Redis;
 using server.DAO.Cart;
 using server.Helper;
@@ -19,9 +20,82 @@ namespace server.BLL.Cart
         #endregion
 
         #region methods
-        public async Task<string> GetCartByCustomerAsync(string cartId)
+        public async Task<CartResponseBO> GetCartByCustomerAsync(string CartId)
         {
-            return await _cartDAO.GetCartAsync(cartId);
+            int? customerId = 1;
+            var result = new CartResponseBO();
+
+            if (customerId.HasValue)
+            {
+                var cartDetails = await _cartDAO.GetCartByCustomerIdAsync(customerId);
+               
+                if (cartDetails == null || cartDetails?.Count == 0)
+                {
+                    return new CartResponseBO 
+                    { 
+                        Success = true, 
+                        Message = "Giỏ hàng trống",
+                    };
+                }
+
+                var cartData = cartDetails.GroupBy(x => new { x.UserId, x.CartId}).Select(g => new CartBO
+                {
+                    UserId = g.Key.UserId,
+                    CartId = g.Key.CartId,
+                    TotalPrice = g.Sum(i => i.Price * Convert.ToDecimal(i.Quantity)),
+                    TotalDiscountAmount = g.Sum(i => i.DiscountAmount),
+                    TotalFinalPrice = g.Sum(i => (i.Price * Convert.ToDecimal(i.Quantity)) - i.DiscountAmount),
+                    CouponCode = g.FirstOrDefault().CouponCode,
+                    Status = g.FirstOrDefault().Status,
+                    ListCartDetail = g.Select(i => new CartDetailBO
+                    {
+                        CartDetailId = i.CartDetailId,
+                        ProductId = i.ProductId,
+                        Quantity = i.Quantity,
+                        Price = i.Price,
+                    }).ToList()
+                }).FirstOrDefault();
+
+                return new CartResponseBO
+                {
+                    Success = true,
+                    Data = cartData
+                };
+            }
+            else if (!string.IsNullOrEmpty(CartId))
+            {
+                // Lấy giỏ hàng từ Redis
+                var cartRedis = _redis.Get<CartModel>(CartId) ?? new CartModel
+                {
+                    CartId = CartId,
+                    Items = new List<CartItem>()
+                };
+
+                if (cartRedis.Items == null || cartRedis.Items.Count == 0)
+                {
+                    return new CartResponseBO
+                    {
+                        Success = true,
+                        Message = "Giỏ hàng trống",
+                    };
+                }
+                else
+                {
+                    var cartData = new CartBO                     {
+                        CartId = CartId,
+                        ListCartDetail = cartRedis.Items.Select(i => new CartDetailBO
+                        {
+                            ProductId = i.ProductId,
+                            Quantity = i.Quantity,
+                        }).ToList()
+                    };
+                }
+            }
+
+            return new CartResponseBO
+            {
+                Message = "Giỏ hàng trống"
+            };
         }
 
         public async Task<CartModel> AddToCartByCustomerAsync(AddToCartRequestBO request)

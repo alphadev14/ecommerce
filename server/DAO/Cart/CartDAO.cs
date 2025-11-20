@@ -1,6 +1,7 @@
 ﻿
 using Npgsql;
 using server.BO.Cart;
+using server.BO.Categories;
 using server.DAO.Base;
 
 namespace server.DAO.Cart
@@ -11,9 +12,55 @@ namespace server.DAO.Cart
         {
         }
 
-        public async Task<string> GetCartAsync(string cartId)
+        public async Task<List<CartDetailBO>> GetCartByCustomerIdAsync(int? customerId)
         {
-            throw new NotImplementedException();
+            var result = new List<CartDetailBO>();
+            await using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var sql = @"
+                    SELECT 
+                        cd.cartdetailid,
+                        c.cartid,
+                        c.userid,
+                        cd.productid,
+                        cd.quantity,
+                        cd.price,
+                        cd.promoid,
+                        cd.discountid,
+                        cd.discountamount,
+                        c.couponcode,
+                        c.status
+                    FROM operation.om_carts c
+                    JOIN operation.om_cart_details cd ON c.cartid = cd.cartid
+                    WHERE c.userid = @userid AND c.isdelete = FALSE AND cd.isdelete = FALSE;
+                ";
+
+            await using var cmd = new NpgsqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("userid", customerId.HasValue ? customerId.Value : DBNull.Value);
+
+            var reader = await cmd.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                var category = new CartDetailBO
+                {
+                    CartDetailId = reader.GetInt32(0),
+                    CartId = reader.GetInt32(1).ToString(),
+                    UserId = reader.GetInt32(2),
+                    ProductId = reader.GetInt32(3),
+                    Quantity = reader.GetInt64(4),
+                    Price = reader.GetDecimal(5),
+                    PromoId = reader.IsDBNull(6) ? null : reader.GetInt32(6),
+                    DiscountId = reader.IsDBNull(7) ? null : reader.GetInt32(7),
+                    DiscountAmount = reader.GetDecimal(8),
+                    CouponCode = reader.GetString(9),
+                    Status = reader.GetString(10),
+                };
+                result.Add(category);
+            }
+
+            return result;
         }
 
         public async Task UpdateOrInsertToCartAsync(int userId, CartModel cartData)
@@ -137,5 +184,6 @@ namespace server.DAO.Cart
                 throw new Exception($"Lỗi lưu dữ liệu giỏ hàng khách hàng đã định danh: {ex}");
             }
         }
+
     }
 }
