@@ -1,0 +1,110 @@
+.login-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafbfc;
+  width: 100%;
+}
+
+.login-form {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+  padding: 40px 32px;
+  width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.login-title {
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 0;
+}
+
+.login-desc {
+  color: #6b7280;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+label {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+input[type="email"],
+input[type="password"] {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  font-size: 1rem;
+  margin-bottom: 8px;
+  background: #f3f4f6;
+}
+
+.login-btn {
+  background: #111;
+  color: #fff;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.login-bottom {
+  text-align: center;
+  margin-top: 12px;
+  font-size: 1rem;
+}
+
+.login-link {
+  color: #2563eb;
+  font-weight: 600;
+  text-decoration: none;
+  margin-left: 4px;
+}
+.login-link:hover {
+  text-decoration: underline;
+}
+
+.partner-button-container {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.partner-button-container .partner-button {
+  width: 40%;
+  font-weight: 600;
+}
+
+@media (max-width: 500px) {
+  .login-form {
+    width: 100%;
+    padding: 24px 8px;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .login-title {
+    font-size: 1.5rem;
+  }
+  .login-desc {
+    font-size: 0.95rem;
+  }
+  input[type="email"],
+  input[type="password"] {
+    font-size: 0.95rem;
+    padding: 10px;
+  }
+  .login-btn {
+    font-size: 0.95rem;
+    padding: 10px;
+  }
+}

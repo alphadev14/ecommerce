@@ -1,0 +1,98 @@
+.register-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafbfc;
+}
+
+.register-form {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+  padding: 40px 32px;
+  width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.register-title {
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 0;
+}
+
+.register-desc {
+  color: #6b7280;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.register-btn {
+  background: #111;
+  color: #fff;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.register-bottom {
+  text-align: center;
+  margin-top: 12px;
+  font-size: 1rem;
+}
+
+.register-link {
+  color: #2563eb;
+  font-weight: 600;
+  text-decoration: none;
+  margin-left: 4px;
+}
+.register-link:hover {
+  text-decoration: underline;
+}
+
+.register-wrapper .register-form .ant-form-item {
+  margin-bottom: unset;
+}
+
+/* Responsive cho màn hình nhỏ */
+@media (max-width: 900px) {
+  .register-form {
+    width: 350px;
+    padding: 32px 16px;
+  }
+}
+@media (max-width: 700px) {
+  .register-form {
+    width: 300px;
+    padding: 24px 8px;
+  }
+  .register-title {
+    font-size: 1.2rem;
+  }
+}
+@media (max-width: 500px) {
+  .register-form {
+    width: 100%;
+    padding: 16px 4px;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .register-title {
+    font-size: 1rem;
+  }
+  .register-desc {
+    font-size: 0.9rem;
+  }
+  .register-btn {
+    font-size: 0.9rem;
+    padding: 8px;
+  }
+}
