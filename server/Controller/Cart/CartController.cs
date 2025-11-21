@@ -52,9 +52,10 @@ namespace server.Controller.Cart
         }
 
         [HttpPost]
-        public async Task MergeCartByCustomer([FromBody] AddToCartRequestBO request)
+        public async Task<IActionResult> MergeCartByCustomer([FromBody] MergeCartRequestBO request)
         {
-            await Task.CompletedTask;
+            var result = await _cartBLL.MergeCartByCustomerAsync(request);
+            return Ok(result);
         }
 
         #endregion

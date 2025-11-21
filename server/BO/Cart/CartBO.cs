@@ -46,7 +46,7 @@ namespace server.BO.Cart
     public class CartItem
     {
         public int ProductId { get; set; }
-        public int Quantity { get; set; }
+        public double Quantity { get; set; }
     }
 
 
@@ -59,5 +59,11 @@ namespace server.BO.Cart
     {
         public string? CartId { get; set; }
         public string? ProductIds { get; set; }
+    }
+
+    public class MergeCartRequestBO
+    {
+        public int UserId { get; set; }
+        public string? GuestCartKey { get; set; }
     }
 }

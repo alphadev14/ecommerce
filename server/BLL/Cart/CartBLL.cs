@@ -181,7 +181,7 @@ namespace server.BLL.Cart
             // Save Redis
             _redis.Set(key, cartData, TimeSpan.FromDays(30));
 
-            // 4. TODO: Save vào DB (optional - khi checkout hoặc sync)
+            // Save vào DB (optional - khi checkout hoặc sync)
             await _cartDAO.UpdateOrInsertToCartAsync(userId, cartData);
             return cartData;
         }
@@ -250,6 +250,85 @@ namespace server.BLL.Cart
                 throw new Exception("Khách hàng không tồn tại.");
             }
         }
+
+        public async Task<CartResponseBO> MergeCartByCustomerAsync(MergeCartRequestBO request)
+        {
+            // B1: Lấy cart guest từ Redis
+            string key = CartKeyBuilder.GuestCart(request.GuestCartKey);
+            var guestCart = _redis.Get<CartModel>(key);
+
+            // Nếu guest cart rỗng → trả về cart user hiện tại
+            if (guestCart == null || guestCart.Items.Count == 0)
+            {
+                var result = await this.GetCartByCustomerAsync(request.UserId.ToString());
+                return new CartResponseBO
+                {
+                    Success = true,
+                    Data = result.Data
+                };
+            }
+
+            // B2: Lấy cart user từ DB
+            var userCart = await this.GetCartByCustomerAsync(request.UserId.ToString());
+
+            if (userCart == null || userCart.Data == null)
+            {
+                // User chưa có cart -> tạo cart rỗng để merge
+                userCart = new CartResponseBO
+                {
+                    Data = new CartBO
+                    {
+                        UserId = request.UserId,
+                        ListCartDetail = new List<CartDetailBO>()
+                    }
+                };
+            }
+
+            // B3: Merge cart
+            foreach (var guestItem in guestCart.Items)
+            {
+                var userItem = userCart.Data.ListCartDetail
+                    .FirstOrDefault(i => i.ProductId == guestItem.ProductId);
+
+                if (userItem != null)
+                {
+                    // Cập nhật số lượng
+                    userItem.Quantity += guestItem.Quantity;
+                }
+                else
+                {
+                    // Thêm sản phẩm mới
+                    userCart.Data.ListCartDetail.Add(new CartDetailBO
+                    {
+                        ProductId = guestItem.ProductId,
+                        Quantity = guestItem.Quantity
+                    });
+                }
+            }
+
+            // B4: Chuyển userCart về CartModel để ghi xuống DB
+            var mergedCartModel = new CartModel
+            {
+                Items = userCart.Data.ListCartDetail.Select(x => new CartItem
+                {
+                    ProductId = x.ProductId,
+                    Quantity = x.Quantity
+                }).ToList()
+            };
+
+            await _cartDAO.UpdateOrInsertToCartAsync(request.UserId, mergedCartModel);
+
+            // B5: Xóa guest cart khỏi Redis
+            _redis.Remove(request.GuestCartKey);
+
+            // B6: Trả về cart sau merge
+            return new CartResponseBO
+            {
+                Success = true,
+                Data = userCart.Data
+            };
+        }
+
         #endregion
     }
 }
